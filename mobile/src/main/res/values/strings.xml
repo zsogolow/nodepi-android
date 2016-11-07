@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">NodePi</string>
+    <string name="ping">Ping</string>
+    <string name="lightsOn">Lights On</string>
+    <string name="lightsOff">Lights Off</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_settings">Settings</string>
+</resources>

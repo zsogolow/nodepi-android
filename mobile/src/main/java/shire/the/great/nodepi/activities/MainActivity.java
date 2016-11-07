@@ -209,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
                 Date heartbeat = format.parse(innerObject.getString("heartbeat"));
                 Duino duino = new Duino(id, type, action, extra, heartbeat);
                 duinos.add(duino);
-            } catch (JSONException | ParseException e) {
+            } catch (JSONException | NullPointerException | ParseException e) {
                 e.printStackTrace();
             }
         }

@@ -3,7 +3,7 @@ package shire.the.great.sockets;
 import org.json.JSONObject;
 
 import shire.the.great.duinos.Duino;
-import shire.the.great.duinos.DuinoActions;
+import shire.the.great.duinos.actions.DuinoActions;
 
 /**
  * Created by ZachS on 11/6/2016.

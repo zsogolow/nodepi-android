@@ -2,6 +2,10 @@ package shire.the.great.duinos;
 
 import java.util.Date;
 
+import shire.the.great.duinos.actions.DuinoActions;
+import shire.the.great.duinos.extras.DuinoExtra;
+import shire.the.great.duinos.types.DuinoTypes;
+
 /**
  * Created by ZachS on 11/6/2016.
  */

@@ -1,6 +1,5 @@
 package shire.the.great.nodepi.activities;
 
-import android.app.Activity;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -10,7 +9,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
 
@@ -18,27 +16,20 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.URISyntaxException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import shire.the.great.constants.Constants;
 import shire.the.great.duinos.Duino;
-import shire.the.great.duinos.DuinoActions;
-import shire.the.great.duinos.DuinoExtra;
-import shire.the.great.duinos.DuinoTypes;
 import shire.the.great.nodepi.R;
 import shire.the.great.nodepi.adapters.DuinosArrayAdapter;
+import shire.the.great.nodepi.sockets.SocketEmitterListener;
 import shire.the.great.nodepi.tasks.AsyncResult;
 import shire.the.great.nodepi.tasks.GetJsonTask;
-import shire.the.great.nodepi.tasks.PackageHandlerTask;
-import shire.the.great.sockets.DuinoPackage;
+import shire.the.great.sockets.DuinoParser;
 import shire.the.great.sockets.HandledPackage;
 
 
@@ -46,38 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = "MainActivity";
 
-    private Emitter.Listener onDataListener = new Emitter.Listener() {
-        @Override
-        public void call(final Object[] args) {
-            getActivity().runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    JSONObject[] datas = new JSONObject[args.length];
-                    for (int i = 0; i < args.length; i++) {
-                        datas[i] = (JSONObject) args[i];
-                    }
-
-                    for (int i = 0; i < args.length; i++) {
-                        JSONObject data = datas[i];
-                        try {
-                            DuinoActions realAction = DuinoActions.parse(data.getString("type"));
-                            DuinoPackage duinoPackage = new DuinoPackage(data, realAction);
-                            if (realAction != DuinoActions.Empty) {
-                                AsyncTask task = new PackageHandlerTask(new AsyncResult<HandledPackage>() {
-                                    @Override
-                                    public void onComplete(HandledPackage output) {
-                                        onSocketPackageReceived(output);
-                                    }
-                                }).execute(duinoPackage);
-                            }
-                        } catch (JSONException e) {
-                            return;
-                        }
-                    }
-                }
-            });
-        }
-    };
+    private SocketEmitterListener mOnDataListener;
 
     // the socket
     private Socket mSocket;
@@ -93,17 +53,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        try {
-            mSocket = IO.socket(Constants.NodePiLocal);
-        } catch (URISyntaxException e) {
-        }
-
-        mSocket.on(Constants.OnData, onDataListener);
-        mSocket.connect();
-
         mDuinos = new HashMap<>();
-
-        updateDuinosState();
 
         mRecyclerView = (RecyclerView) findViewById(R.id.duinosListView);
 
@@ -117,14 +67,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onStart() {
+        super.onStart();
 
-        // disconnect the socket
-        mSocket.disconnect();
-        mSocket.off(Constants.OnData, onDataListener);
+        connectSocket();
+
+        updateDuinosState();
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        disconnectSocket();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -136,26 +97,45 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id. action_settings:
+            case R.id.action_settings:
                 // User chose the "Settings" item, show the app settings UI...
                 return true;
 
             case R.id.action_refresh:
                 // User chose the "refresh" action
-                clearDuinosState();
-                updateDuinosState();
+                refresh();
                 return true;
 
             default:
                 // If we got here, the user's action was not recognized.
                 // Invoke the superclass to handle it.
                 return super.onOptionsItemSelected(item);
-
         }
     }
 
-    private Activity getActivity() {
-        return this;
+    private void refresh() {
+        disconnectSocket();
+        connectSocket();
+        clearDuinosState();
+        updateDuinosState();
+    }
+
+    private void connectSocket() {
+        mOnDataListener = new SocketEmitterListener(this);
+
+        try {
+            mSocket = IO.socket(Constants.NodePiLocal);
+        } catch (URISyntaxException e) {
+        }
+
+        mSocket.on(Constants.OnData, mOnDataListener);
+        mSocket.connect();
+    }
+
+    private void disconnectSocket() {
+        // disconnect the socket
+        mSocket.disconnect();
+        mSocket.off(Constants.OnData, mOnDataListener);
     }
 
     // TODO: 11/6/2016
@@ -174,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // TODO: 11/6/2016
-    private void onSocketPackageReceived(HandledPackage handledPackage) {
+    public void onSocketPackageReceived(HandledPackage handledPackage) {
         Duino duino = handledPackage.getDuino();
         updateDuino(duino);
         mAdapter.swap(getDuinosList());
@@ -200,23 +180,15 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 1; i <= Constants.NumDuinos; i++) {
             try {
                 JSONObject innerObject = jsonObject.getJSONObject(i + "");
-                int id = innerObject.getInt("id");
-                DuinoTypes type = DuinoTypes.parse(innerObject.getString("type"));
-                DuinoActions action = DuinoActions.parse(innerObject.getString("action"));
-                DuinoExtra extra = new DuinoExtra(innerObject.getString("extra"));
-                SimpleDateFormat format = new SimpleDateFormat(
-                        "yyyy-MM-dd'T'hh:mm:ss.SSS'Z'", Locale.US);
-                Date heartbeat = format.parse(innerObject.getString("heartbeat"));
-                Duino duino = new Duino(id, type, action, extra, heartbeat);
-                duinos.add(duino);
-            } catch (JSONException | NullPointerException | ParseException e) {
+                duinos.add(DuinoParser.parse(innerObject));
+            } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
         return duinos;
     }
 
-    public Map<Integer, Duino> getDuinos() {
+    public Map<Integer, Duino> getDuinosMap() {
         return mDuinos;
     }
 

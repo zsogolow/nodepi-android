@@ -1,6 +1,6 @@
 package shire.the.great.http;
 
-import shire.the.great.duinos.DuinoActions;
+import shire.the.great.duinos.actions.DuinoActions;
 
 /**
  * Created by ZachS on 11/6/2016.

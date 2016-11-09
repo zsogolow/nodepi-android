@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 
-import shire.the.great.duinos.DuinoActions;
+import shire.the.great.duinos.actions.DuinoActions;
 import shire.the.great.http.DuinoHttpClient;
 import shire.the.great.http.DuinoExecution;
 

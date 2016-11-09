@@ -3,7 +3,6 @@ package shire.the.great.nodepi.tasks;
 import android.os.AsyncTask;
 
 import shire.the.great.duinos.Duino;
-import shire.the.great.duinos.DuinoActions;
 import shire.the.great.sockets.DuinoPackage;
 import shire.the.great.sockets.HandledPackage;
 import shire.the.great.sockets.PackageHandler;

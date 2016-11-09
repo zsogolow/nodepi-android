@@ -1,4 +1,4 @@
-package shire.the.great.duinos;
+package shire.the.great.duinos.types;
 
 /**
  * Created by ZachS on 11/6/2016.

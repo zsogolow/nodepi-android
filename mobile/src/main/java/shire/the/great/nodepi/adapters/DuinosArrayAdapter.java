@@ -12,8 +12,10 @@ import android.widget.TextView;
 import java.util.List;
 
 import shire.the.great.duinos.Duino;
-import shire.the.great.duinos.DuinoActions;
-import shire.the.great.duinos.DuinoTypes;
+import shire.the.great.duinos.actions.DuinoActions;
+import shire.the.great.duinos.types.DuinoTypes;
+import shire.the.great.duinos.extras.RelayExtra;
+import shire.the.great.duinos.extras.TempExtra;
 import shire.the.great.http.DuinoExecution;
 import shire.the.great.nodepi.R;
 import shire.the.great.nodepi.tasks.AsyncResult;
@@ -90,7 +92,15 @@ public class DuinosArrayAdapter extends RecyclerView.Adapter<DuinosArrayAdapter.
         idTextView.setText(duino.getId() + "");
         typeTextView.setText(duino.getType().typeName);
         hbTextView.setText(duino.getHeartbeat().toString());
-        extraTextView.setText(duino.getExtra().extra.toString());
+        if (duino.getType() == DuinoTypes.Relay) {
+            RelayExtra extra = (RelayExtra) duino.getExtra();
+            extraTextView.setText(extra.toString());
+        } else if (duino.getType() == DuinoTypes.Temperature) {
+            TempExtra extra = (TempExtra)duino.getExtra();
+            extraTextView.setText(extra.toString());
+        } else {
+            extraTextView.setText(duino.getExtra().toString());
+        }
 
         pingButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -104,7 +114,8 @@ public class DuinosArrayAdapter extends RecyclerView.Adapter<DuinosArrayAdapter.
         });
 
         if (duino.getType() == DuinoTypes.Relay) {
-            if (duino.getExtra().extra.equals("1")) {
+            RelayExtra extra = (RelayExtra) duino.getExtra();
+            if (extra.lightsOn()) {
                 lightsOnButton.setVisibility(View.GONE);
                 lightsOffButton.setVisibility(View.VISIBLE);
             } else {

@@ -2,17 +2,21 @@ package shire.the.great.duinos;
 
 import java.util.Date;
 
+import shire.the.great.duinos.actions.DuinoActions;
+import shire.the.great.duinos.extras.DuinoExtra;
+import shire.the.great.duinos.types.DuinoTypes;
+
 /**
  * Created by ZachS on 11/6/2016.
  */
 
-public class Duino implements Comparable<Duino> {
+public abstract class Duino implements Comparable<Duino> {
 
-    private int id;
-    private DuinoTypes type;
-    private DuinoActions action;
-    private DuinoExtra extra;
-    private Date heartbeat;
+    protected int id;
+    protected DuinoTypes type;
+    protected DuinoActions action;
+    protected DuinoExtra extra;
+    protected Date heartbeat;
 
     public Duino(int id, DuinoTypes type, DuinoActions action, DuinoExtra extra, Date heartbeat) {
         this.id = id;
